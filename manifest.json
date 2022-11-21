@@ -5,9 +5,12 @@
     "display": "standalone",
     "background_color": "#fdfdfd",
     "theme_color": "#db4938",
-    "scope": ".",
     "orientation": "portrait-primary",
     "icons": [
+      {
+        "src": "./images/icons/maskable_icon_x48.png",
+        "type": "image/png", "sizes": "48x48"
+      },
       {
         "src": "./images/icons/icon-72x72.png",
         "type": "image/png", "sizes": "72x72"
@@ -15,6 +18,10 @@
       {
         "src": "./images/icons/icon-96x96.png",
         "type": "image/png", "sizes": "96x96"
+      },
+      {
+        "src": "./images/icons/maskable_icon_x128.png",
+        "type": "image/png", "sizes": "128x128"
       },
       {
         "src": "./images/icons/icon-144x144.png",
@@ -27,7 +34,15 @@
       {
         "src": "./images/icons/icon-192x192.png",
         "type": "image/png", "sizes": "192x192"
-      } 
+      },
+      {
+        "src": "/images/icons/maskable_icon_x384.png",
+        "type": "image/png", "sizes": "384x384"
+      },
+      {
+        "src": "/images/icons/maskable_icon_x512.png",
+        "type": "image/png", "sizes": "512x512"
+      }
     ]
   }
   
