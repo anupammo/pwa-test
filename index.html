@@ -1,24 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My PWA</title>
-  <!-- Link to Web App Manifest -->
-  <link rel="manifest" href="./manifest.json">
-  <!-- Theme Color for Address Bar -->
-  <meta name="theme-color" content="#2F3BA2"/>
-  <link rel="icon" href="favicon.ico" type="image/x-icon" />
-</head>
-<body>
-  <h1>Hello PWA!</h1>
-  <script>
-    // Register Service Worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('Service Worker registered'))
-        .catch(err => console.error('Registration failed:', err));
-    }
-  </script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My PWA</title>
+    <!-- Link to Web App Manifest -->
+    <link rel="manifest" href="./manifest.json" />
+    <!-- Theme Color for Address Bar -->
+    <meta name="theme-color" content="#2F3BA2" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  </head>
+  <body>
+    <h1>Hello PWA!</h1>
+    <script>
+      // Register Service Worker
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("/sw.js")
+          .then((reg) => console.log("Service Worker registered"))
+          .catch((err) => console.error("Registration failed:", err));
+      }
+
+      // In your main JavaScript
+      let deferredPrompt;
+
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        // Show install button (hidden by default)
+        document.getElementById("installBtn").style.display = "block";
+      });
+
+      document.getElementById("installBtn").addEventListener("click", () => {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choice) => {
+          if (choice.outcome === "accepted") console.log("User installed");
+          deferredPrompt = null;
+        });
+      });
+    </script>
+  </body>
 </html>
