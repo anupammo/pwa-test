@@ -1,0 +1,19 @@
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background-color: #f0f2f5;
+    }
+    h1 {
+      color: #2F3BA2;
+    }
+    #installBtn {
+      background-color: #2F3BA2;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+    }

@@ -1,51 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PWA Fixed</title>
-    <link rel="manifest" href="manifest.json" />
-    <meta name="theme-color" content="#2F3BA2" />
-    <link rel="icon" href="favicon.ico" type="image/x-icon" />
-  </head>
-  <body>
-    <h1>Working PWA</h1>
-    <button id="installBtn" style="display: none">Install App</button>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PWA Test</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2F3BA2"/>
+</head>
+<body>
+  <h1>PWA Test App</h1>
+  <p>Successfully deployed on GitHub Pages</p>
+  
+  <button id="installBtn" style="display: none;">Install App</button>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const installButton = document.getElementById("installBtn");
-        let deferredPrompt;
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const installButton = document.getElementById('installBtn');
+      let deferredPrompt;
 
-        // Service Worker Registration
-        if ("serviceWorker" in navigator) {
-          navigator.serviceWorker
-            .register("sw.js")
-            .then((reg) => console.log("SW registered"))
-            .catch((err) => console.error("SW registration failed:", err));
-        }
+      // Service Worker Registration
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker registered at scope:', reg.scope))
+          .catch(err => console.error('SW registration failed:', err));
+      }
 
-        // Install Prompt Handling
-        window.addEventListener("beforeinstallprompt", (e) => {
-          e.preventDefault();
-          deferredPrompt = e;
-          installButton.style.display = "block";
-        });
-
-        installButton.addEventListener("click", async () => {
-          if (!deferredPrompt) return;
-
-          deferredPrompt.prompt();
-          const { outcome } = await deferredPrompt.userChoice;
-
-          if (outcome === "accepted") {
-            console.log("User installed PWA");
-          }
-
-          deferredPrompt = null;
-          installButton.style.display = "none";
-        });
+      // Install Prompt Handling
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        installButton.style.display = 'block';
       });
-    </script>
-  </body>
+
+      installButton.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        
+        if (outcome === 'accepted') {
+          console.log('User installed the PWA');
+        }
+        
+        deferredPrompt = null;
+        installButton.style.display = 'none';
+      });
+
+      // Add a home screen icon hint for iOS
+      const isIos = () => {
+        const userAgent = window.navigator.userAgent.toLowerCase();
+        return /iphone|ipad|ipod/.test(userAgent);
+      };
+
+      const isInStandaloneMode = () => 
+        ('standalone' in window.navigator) && (window.navigator.standalone);
+
+      if (isIos() && !isInStandaloneMode()) {
+        alert('To install this app: tap Share then "Add to Home Screen"');
+      }
+    });
+  </script>
+</body>
 </html>

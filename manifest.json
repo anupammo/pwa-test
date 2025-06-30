@@ -1,10 +1,12 @@
 {
-  "name": "My PWA",
-  "short_name": "PWA",
-  "start_url": "/",
+  "name": "PWA Test",
+  "short_name": "PWATest",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#2F3BA2",
   "theme_color": "#2F3BA2",
+  "description": "A test PWA for GitHub Pages",
   "icons": [
     {
       "src": "icon-192.png",
