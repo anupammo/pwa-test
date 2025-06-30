@@ -3,39 +3,46 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My PWA</title>
-    <!-- Link to Web App Manifest -->
-    <link rel="manifest" href="./manifest.json" />
-    <!-- Theme Color for Address Bar -->
+    <title>PWA Fixed</title>
+    <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#2F3BA2" />
-    <link rel="icon" href="favicon.ico" type="image/x-icon" />
   </head>
   <body>
-    <h1>Hello PWA!</h1>
+    <h1>Working PWA</h1>
+    <button id="installBtn" style="display: none">Install App</button>
+
     <script>
-      // Register Service Worker
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker
-          .register("/sw.js")
-          .then((reg) => console.log("Service Worker registered"))
-          .catch((err) => console.error("Registration failed:", err));
-      }
+      document.addEventListener("DOMContentLoaded", () => {
+        const installButton = document.getElementById("installBtn");
+        let deferredPrompt;
 
-      // In your main JavaScript
-      let deferredPrompt;
+        // Service Worker Registration
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker
+            .register("sw.js")
+            .then((reg) => console.log("SW registered"))
+            .catch((err) => console.error("SW registration failed:", err));
+        }
 
-      window.addEventListener("beforeinstallprompt", (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        // Show install button (hidden by default)
-        document.getElementById("installBtn").style.display = "block";
-      });
+        // Install Prompt Handling
+        window.addEventListener("beforeinstallprompt", (e) => {
+          e.preventDefault();
+          deferredPrompt = e;
+          installButton.style.display = "block";
+        });
 
-      document.getElementById("installBtn").addEventListener("click", () => {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choice) => {
-          if (choice.outcome === "accepted") console.log("User installed");
+        installButton.addEventListener("click", async () => {
+          if (!deferredPrompt) return;
+
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+
+          if (outcome === "accepted") {
+            console.log("User installed PWA");
+          }
+
           deferredPrompt = null;
+          installButton.style.display = "none";
         });
       });
     </script>
