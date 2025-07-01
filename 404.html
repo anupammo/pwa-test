@@ -1,8 +1,19 @@
 <!DOCTYPE html>
-<script>
-  const repoPath = location.pathname.split('/')[1];
-  window.location.href = `/${repoPath}/index.html`;
-</script>
+<html>
+<head>
+  <title>Redirecting...</title>
+  <script>
+    const pathSegments = window.location.pathname.split('/');
+    const repoName = pathSegments[1] || 'pwa-test';
+    window.location.href = `/${repoName}/index.html`;
+  </script>
+</head>
 <body>
-  Redirecting to app...
+  <h1>Redirecting to App...</h1>
+  <p>If you're not redirected automatically, <a id="redirectLink" href="#">click here</a>.</p>
+  
+  <script>
+    document.getElementById('redirectLink').href = `/${repoName}/index.html`;
+  </script>
 </body>
+</html>

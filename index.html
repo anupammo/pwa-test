@@ -1,4 +1,3 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
@@ -6,45 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PWA Test</title>
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
-  <link rel="manifest" href="manifest.json" id="manifestLink">
+  <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#2F3BA2"/>
+  <style>
+  </style>
 </head>
 <body>
   <h1>PWA Test App</h1>
   <p>GitHub Pages PWA with advanced features</p>
   
-  <button id="installBtn" style="display: none;">Install App</button>
-  <button id="notificationBtn">Test Notification</button>
+  <div class="controls">
+    <button id="installBtn" class="btn">Install App</button>
+    <button id="permissionBtn" class="btn">Enable Notifications</button>
+    <button id="notificationBtn" class="btn">Test Notification</button>
+  </div>
   
-  <div id="syncStatus" class="sync-status">
-    Background Sync Status: <span id="syncState">Not active</span>
+  <div class="status-card">
+    <div class="status-title">Background Sync Status</div>
+    <div id="syncStatus" class="sync-status">
+      <span id="syncState">Not active</span>
+    </div>
+  </div>
+
+  <div class="status-card">
+    <div class="status-title">Service Worker Status</div>
+    <div id="swStatus">Not registered</div>
   </div>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const installButton = document.getElementById('installBtn');
+      const permissionButton = document.getElementById('permissionBtn');
       const notificationButton = document.getElementById('notificationBtn');
       const syncStateElement = document.getElementById('syncState');
+      const swStatusElement = document.getElementById('swStatus');
       let deferredPrompt;
       let registration;
 
-      // Register Service Worker with advanced features
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => {
-            console.log('Service Worker registered at scope:', reg.scope);
-            registration = reg;
-            setupBackgroundSync();
-            setupPeriodicSync();
-          })
-          .catch(err => console.error('SW registration failed:', err));
-      }
+      // Initialize UI based on current state
+      updateNotificationUI();
+      
+      // Register Service Worker
+      registerServiceWorker();
 
       // Install Prompt Handling
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        installButton.style.display = 'block';
+        installButton.style.display = 'inline-block';
       });
 
       installButton.addEventListener('click', async () => {
@@ -55,23 +63,64 @@
         
         if (outcome === 'accepted') {
           console.log('User installed the PWA');
+          installButton.textContent = 'App Installed';
+          installButton.disabled = true;
         }
         
         deferredPrompt = null;
-        installButton.style.display = 'none';
       });
 
-      // Notification Handling
-      notificationButton.addEventListener('click', () => {
-        if (!registration) return;
-        
-        registration.showNotification('PWA Test Notification', {
-          body: 'This is a test notification from your PWA',
-          icon: 'icon-192.png',
-          badge: 'icon-192.png',
-          vibrate: [200, 100, 200]
+      // Notification Permission Handling
+      permissionButton.addEventListener('click', () => {
+        Notification.requestPermission().then(permission => {
+          updateNotificationUI();
+          if (permission === 'granted') {
+            console.log('Notification permission granted');
+          } else {
+            alert('Please enable notifications in browser settings to receive updates');
+          }
         });
       });
+
+      // Test Notification Button
+      notificationButton.addEventListener('click', () => {
+        if (Notification.permission !== 'granted') {
+          alert('Please enable notifications first');
+          return;
+        }
+        
+        if (registration) {
+          registration.showNotification('PWA Test Notification', {
+            body: 'This is a test notification from your PWA',
+            icon: 'icon-192.png',
+            badge: 'icon-192.png',
+            vibrate: [200, 100, 200]
+          });
+        }
+      });
+
+      // iOS Installation Prompt
+      checkIosInstallPrompt();
+
+      // Service Worker Registration
+      function registerServiceWorker() {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => {
+              console.log('Service Worker registered at scope:', reg.scope);
+              registration = reg;
+              swStatusElement.textContent = `Registered: ${reg.scope}`;
+              setupBackgroundSync();
+              setupPeriodicSync();
+            })
+            .catch(err => {
+              console.error('SW registration failed:', err);
+              swStatusElement.textContent = `Error: ${err.message}`;
+            });
+        } else {
+          swStatusElement.textContent = 'Service Workers not supported';
+        }
+      }
 
       // Background Sync Setup
       function setupBackgroundSync() {
@@ -112,17 +161,30 @@
           });
       }
 
+      // Update Notification UI based on permission state
+      function updateNotificationUI() {
+        if (Notification.permission === 'granted') {
+          permissionButton.style.display = 'none';
+          notificationButton.style.display = 'inline-block';
+        } else {
+          permissionButton.style.display = 'inline-block';
+          notificationButton.style.display = 'none';
+        }
+      }
+
       // iOS Installation Prompt
-      const isIos = () => {
-        const userAgent = window.navigator.userAgent.toLowerCase();
-        return /iphone|ipad|ipod/.test(userAgent);
-      };
+      function checkIosInstallPrompt() {
+        const isIos = () => {
+          const userAgent = window.navigator.userAgent.toLowerCase();
+          return /iphone|ipad|ipod/.test(userAgent);
+        };
 
-      const isInStandaloneMode = () => 
-        ('standalone' in window.navigator) && (window.navigator.standalone);
+        const isInStandaloneMode = () => 
+          ('standalone' in window.navigator) && (window.navigator.standalone);
 
-      if (isIos() && !isInStandaloneMode()) {
-        alert('To install this app: tap Share then "Add to Home Screen"');
+        if (isIos() && !isInStandaloneMode()) {
+          alert('To install this app: tap Share then "Add to Home Screen"');
+        }
       }
     });
   </script>

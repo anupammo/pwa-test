@@ -1,5 +1,4 @@
-// sw.js
-const CACHE_NAME = 'pwa-test-cache-v2';
+const CACHE_NAME = 'pwa-test-cache-v3';
 const BASE_PATH = '/pwa-test/';
 
 const urlsToCache = [
@@ -14,7 +13,7 @@ const urlsToCache = [
   BASE_PATH + 'screenshot2.png'
 ];
 
-// Install with enhanced caching
+// Install with caching
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -23,11 +22,14 @@ self.addEventListener('install', event => {
   );
 });
 
-// Advanced fetch handler with network-first strategy
+// Fetch handling with network-first strategy
 self.addEventListener('fetch', event => {
   const requestUrl = new URL(event.request.url);
   
-  // Cache API requests for better offline experience
+  // Skip non-GET requests
+  if (event.request.method !== 'GET') return;
+  
+  // Cache API requests
   if (requestUrl.pathname.endsWith('/api/data')) {
     event.respondWith(
       fetch(event.request)
@@ -48,11 +50,9 @@ self.addEventListener('fetch', event => {
     fetch(event.request)
       .then(response => {
         // Update cache
-        if (event.request.method === 'GET') {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME)
-            .then(cache => cache.put(event.request, responseClone));
-        }
+        const responseClone = response.clone();
+        caches.open(CACHE_NAME)
+          .then(cache => cache.put(event.request, responseClone));
         return response;
       })
       .catch(() => caches.match(event.request))
@@ -64,10 +64,12 @@ self.addEventListener('sync', event => {
   if (event.tag === 'content-update') {
     event.waitUntil(
       updateContent().then(() => {
-        self.registration.showNotification('Content Updated', {
-          body: 'New content is available',
-          icon: BASE_PATH + 'icon-192.png'
-        });
+        if (Notification.permission === 'granted') {
+          self.registration.showNotification('Content Updated', {
+            body: 'New content is available',
+            icon: BASE_PATH + 'icon-192.png'
+          });
+        }
       })
     );
   }
@@ -76,23 +78,36 @@ self.addEventListener('sync', event => {
 // Periodic Sync handler
 self.addEventListener('periodicsync', event => {
   if (event.tag === 'daily-update') {
-    event.waitUntil(updateContent());
+    event.waitUntil(
+      updateContent().then(() => {
+        if (Notification.permission === 'granted') {
+          self.registration.showNotification('Daily Update', {
+            body: 'New content has been updated',
+            icon: BASE_PATH + 'icon-192.png'
+          });
+        }
+      })
+    );
   }
 });
 
 // Push notifications
 self.addEventListener('push', event => {
-  const data = event.data.json();
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'New Update', {
-      body: data.body || 'New content is available!',
-      icon: BASE_PATH + 'icon-192.png',
-      badge: BASE_PATH + 'icon-192.png',
-      data: { url: data.url || BASE_PATH }
-    })
-  );
+  const data = event.data?.json() || {};
+  
+  if (Notification.permission === 'granted') {
+    event.waitUntil(
+      self.registration.showNotification(data.title || 'New Update', {
+        body: data.body || 'New content is available!',
+        icon: BASE_PATH + 'icon-192.png',
+        badge: BASE_PATH + 'icon-192.png',
+        data: { url: data.url || BASE_PATH }
+      })
+    );
+  }
 });
 
+// Notification click handler
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   const url = event.notification.data.url || BASE_PATH;
@@ -113,6 +128,8 @@ self.addEventListener('notificationclick', event => {
 // Content update logic
 async function updateContent() {
   const cache = await caches.open(CACHE_NAME);
+  
+  // Update core files
   await cache.addAll([
     BASE_PATH + 'index.html',
     BASE_PATH + 'manifest.json'
@@ -129,6 +146,7 @@ async function updateContent() {
   });
   
   console.log('Content updated via background sync');
+  return true;
 }
 
 // Cache cleanup
