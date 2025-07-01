@@ -1,3 +1,23 @@
+Service Worker
+PWABuilder has analyzed your Service Worker and your Service Worker is ready for packaging! Great job you have a perfect score!
+
+has_service_worker iconvalid result indicator
+has service worker
+
+background_sync iconvalid result indicator
+background sync
+
+periodic_sync iconvalid result indicator
+periodic sync
+
+push_notifications iconvalid result indicator
+push notifications
+
+offline_support iconvalid result indicator
+offline support
+
+
+
 Required
 
 passing result icon
