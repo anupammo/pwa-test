@@ -7,8 +7,10 @@ const urlsToCache = [
   BASE_PATH + '404.html',
   BASE_PATH + 'styles.css',
   BASE_PATH + 'manifest.json',
-  BASE_PATH + 'icon-192.png',
-  BASE_PATH + 'icon-512.png',
+  BASE_PATH + 'icon-any-192.png',
+  BASE_PATH + 'icon-any-512.png',
+  BASE_PATH + 'icon-maskable-192.png',
+  BASE_PATH + 'icon-maskable-512.png',
   BASE_PATH + 'screenshot1.png',
   BASE_PATH + 'screenshot2.png'
 ];
