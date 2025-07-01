@@ -1,12 +1,30 @@
 {
+  "id": "/pwa-test/",
   "name": "PWA Test",
   "short_name": "PWATest",
   "start_url": "./index.html",
   "scope": "./",
+  "scope_extensions": [{"origin": "https://anupammo.github.io"}],
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#2F3BA2",
   "theme_color": "#2F3BA2",
-  "description": "A test PWA for GitHub Pages",
+  "description": "Advanced PWA test for GitHub Pages",
+  "dir": "ltr",
+  "lang": "en",
+  "categories": ["productivity", "utilities"],
+  "iarc_rating_id": "e84b072d-1b3f-4e32-8ce6-9f55c7b1c5e1",
+  "prefer_related_applications": false,
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.example.app",
+      "id": "com.example.app"
+    }
+  ],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
   "icons": [
     {
       "src": "icon-192.png",
@@ -17,6 +35,20 @@
       "src": "icon-512.png",
       "type": "image/png",
       "sizes": "512x512"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot1.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "screenshot2.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow"
     }
   ]
 }

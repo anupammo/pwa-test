@@ -1,28 +1,42 @@
+<!-- index.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PWA Test</title>
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="manifest.json" id="manifestLink">
   <meta name="theme-color" content="#2F3BA2"/>
 </head>
 <body>
   <h1>PWA Test App</h1>
-  <p>Successfully deployed on GitHub Pages</p>
+  <p>GitHub Pages PWA with advanced features</p>
   
   <button id="installBtn" style="display: none;">Install App</button>
+  <button id="notificationBtn">Test Notification</button>
+  
+  <div id="syncStatus" class="sync-status">
+    Background Sync Status: <span id="syncState">Not active</span>
+  </div>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const installButton = document.getElementById('installBtn');
+      const notificationButton = document.getElementById('notificationBtn');
+      const syncStateElement = document.getElementById('syncState');
       let deferredPrompt;
+      let registration;
 
-      // Service Worker Registration
+      // Register Service Worker with advanced features
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('Service Worker registered at scope:', reg.scope))
+          .then(reg => {
+            console.log('Service Worker registered at scope:', reg.scope);
+            registration = reg;
+            setupBackgroundSync();
+            setupPeriodicSync();
+          })
           .catch(err => console.error('SW registration failed:', err));
       }
 
@@ -47,7 +61,58 @@
         installButton.style.display = 'none';
       });
 
-      // Add a home screen icon hint for iOS
+      // Notification Handling
+      notificationButton.addEventListener('click', () => {
+        if (!registration) return;
+        
+        registration.showNotification('PWA Test Notification', {
+          body: 'This is a test notification from your PWA',
+          icon: 'icon-192.png',
+          badge: 'icon-192.png',
+          vibrate: [200, 100, 200]
+        });
+      });
+
+      // Background Sync Setup
+      function setupBackgroundSync() {
+        if (!('SyncManager' in window)) {
+          syncStateElement.textContent = 'Background Sync not supported';
+          return;
+        }
+
+        navigator.serviceWorker.ready
+          .then(reg => reg.sync.register('content-update'))
+          .then(() => {
+            syncStateElement.textContent = 'Sync registered!';
+            console.log('Background Sync registered');
+          })
+          .catch(err => {
+            syncStateElement.textContent = 'Sync registration failed';
+            console.error('Background Sync error:', err);
+          });
+      }
+
+      // Periodic Sync Setup
+      function setupPeriodicSync() {
+        if (!('periodicSync' in navigator)) {
+          console.log('Periodic Sync not supported');
+          return;
+        }
+
+        navigator.permissions.query({name: 'periodic-background-sync'})
+          .then(status => {
+            if (status.state === 'granted') {
+              navigator.serviceWorker.ready
+                .then(reg => reg.periodicSync.register('daily-update', {
+                  minInterval: 24 * 60 * 60 * 1000 // 1 day
+                }))
+                .then(() => console.log('Periodic Sync registered'))
+                .catch(err => console.error('Periodic Sync failed:', err));
+            }
+          });
+      }
+
+      // iOS Installation Prompt
       const isIos = () => {
         const userAgent = window.navigator.userAgent.toLowerCase();
         return /iphone|ipad|ipod/.test(userAgent);

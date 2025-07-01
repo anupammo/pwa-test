@@ -1,5 +1,6 @@
-const CACHE_NAME = 'pwa-test-cache-v1';
-const BASE_PATH = self.location.pathname.replace(/\/[^\/]*$/, '/');
+// sw.js
+const CACHE_NAME = 'pwa-test-cache-v2';
+const BASE_PATH = '/pwa-test/';
 
 const urlsToCache = [
   BASE_PATH,
@@ -8,50 +9,129 @@ const urlsToCache = [
   BASE_PATH + 'styles.css',
   BASE_PATH + 'manifest.json',
   BASE_PATH + 'icon-192.png',
-  BASE_PATH + 'icon-512.png'
+  BASE_PATH + 'icon-512.png',
+  BASE_PATH + 'screenshot1.png',
+  BASE_PATH + 'screenshot2.png'
 ];
 
+// Install with enhanced caching
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Caching URLs:', urlsToCache);
-        return cache.addAll(urlsToCache);
-      })
-      .catch(err => {
-        console.error('Cache addAll error:', err);
-        return caches.open(CACHE_NAME)
-          .then(cache => cache.add(BASE_PATH + 'index.html'));
-      })
+      .then(cache => cache.addAll(urlsToCache))
+      .catch(err => console.error('Cache error:', err))
   );
 });
 
+// Advanced fetch handler with network-first strategy
 self.addEventListener('fetch', event => {
   const requestUrl = new URL(event.request.url);
   
-  // Only cache same-origin requests
-  if (requestUrl.origin !== location.origin) return;
-  
+  // Cache API requests for better offline experience
+  if (requestUrl.pathname.endsWith('/api/data')) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          // Clone to cache and return
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME)
+            .then(cache => cache.put(event.request, responseClone));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // For other requests: network first, then cache
   event.respondWith(
-    caches.match(event.request)
+    fetch(event.request)
       .then(response => {
-        return response || fetch(event.request)
-          .then(fetchResponse => {
-            return caches.open(CACHE_NAME).then(cache => {
-              cache.put(event.request, fetchResponse.clone());
-              return fetchResponse;
-            });
-          })
-          .catch(() => {
-            // Fallback for failed requests
-            if (event.request.url.endsWith('.html')) {
-              return caches.match(BASE_PATH + 'index.html');
-            }
-          });
+        // Update cache
+        if (event.request.method === 'GET') {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME)
+            .then(cache => cache.put(event.request, responseClone));
+        }
+        return response;
       })
+      .catch(() => caches.match(event.request))
   );
 });
 
+// Background Sync handler
+self.addEventListener('sync', event => {
+  if (event.tag === 'content-update') {
+    event.waitUntil(
+      updateContent().then(() => {
+        self.registration.showNotification('Content Updated', {
+          body: 'New content is available',
+          icon: BASE_PATH + 'icon-192.png'
+        });
+      })
+    );
+  }
+});
+
+// Periodic Sync handler
+self.addEventListener('periodicsync', event => {
+  if (event.tag === 'daily-update') {
+    event.waitUntil(updateContent());
+  }
+});
+
+// Push notifications
+self.addEventListener('push', event => {
+  const data = event.data.json();
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'New Update', {
+      body: data.body || 'New content is available!',
+      icon: BASE_PATH + 'icon-192.png',
+      badge: BASE_PATH + 'icon-192.png',
+      data: { url: data.url || BASE_PATH }
+    })
+  );
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const url = event.notification.data.url || BASE_PATH;
+  event.waitUntil(
+    clients.matchAll({type: 'window'}).then(windowClients => {
+      for (const client of windowClients) {
+        if (client.url === url && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(url);
+      }
+    })
+  );
+});
+
+// Content update logic
+async function updateContent() {
+  const cache = await caches.open(CACHE_NAME);
+  await cache.addAll([
+    BASE_PATH + 'index.html',
+    BASE_PATH + 'manifest.json'
+  ]);
+  
+  // Send message to all clients
+  const clients = await self.clients.matchAll();
+  clients.forEach(client => {
+    client.postMessage({
+      type: 'content-updated',
+      message: 'New content is available',
+      timestamp: Date.now()
+    });
+  });
+  
+  console.log('Content updated via background sync');
+}
+
+// Cache cleanup
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -62,4 +142,11 @@ self.addEventListener('activate', event => {
       );
     })
   );
+});
+
+// Handle messages from clients
+self.addEventListener('message', event => {
+  if (event.data.type === 'trigger-update') {
+    updateContent();
+  }
 });
